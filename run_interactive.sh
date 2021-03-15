@@ -4,12 +4,12 @@ gpu_id=0 # 1,0
 is_train=0
 topk=40
 
-test_checkpoint="output/clf_prob_rl/model_best.ckpt"
+test_checkpoint="clf_prob_rl/model_best.ckpt"
 
 
 config_model=configs.config_model_345M
-pretrained_model_dir=/home/hannah/Counterfactual-StoryRW/gpt2_pretrained_models/model_345M
-pretrain_checkpoint=/home/hannah/Counterfactual-StoryRW/gpt2_pretrained_models/model_345M/model.ckpt
+pretrained_model_dir=./gpt2_pretrained_models/model_345M
+pretrain_checkpoint=./gpt2_pretrained_models/model_345M/model.ckpt
 
 rl_method="clf_prob"
 
