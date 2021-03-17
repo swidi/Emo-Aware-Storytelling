@@ -27,6 +27,21 @@ def printpoem(poem,flag=""):
       print(flag,line)
     print()
 
+def accumulate(dict, string):
+  for emo in string.split(" --- "):
+    if (emo in dict):
+      dict[emo] += 1
+    else:
+      dict[emo] = 1
+  return dict
+
+def keywithmaxval(d):
+  """ a) create a list of the dict's keys and values;
+      b) return the key with the max value"""
+  v = list(d.values())
+  k = list(d.keys())
+  return k[v.index(max(v))]
+
 if __name__ == "__main__":
 
   poems = readPoems(sys.argv[1])
@@ -77,14 +92,35 @@ if __name__ == "__main__":
   for poem in poems:
     titles.write(poem[0][0][0] + "\r\n")
     stanzas = []
+    emotions = []
 
     for stanza in poem:
       if(len(stanza) != 1): # Skip the title
-        stanzas.append(' '.join("%s" % line[0] for line in stanza))
+        emotion = dict()
+
+        stanza_string = ""
+        for line in stanza:
+          emotion = accumulate(emotion, line[1])
+          emotion = accumulate(emotion, line[2])
+          stanza_string += line[0] + " "
+        stanza_string = stanza_string[:-1] # remove the last space
+        stanza_emotion = keywithmaxval(emotion)
+        print(stanza)
+        print(emotion)
+        print(stanza_emotion)
+
+        emotions.append(stanza_emotion)
+        stanzas.append(stanza_string)
+        print("===========")
+
     story = ' '.join(stanzas)
-    stories.write(story + " <|endoftext|>\r\n")
+    emotion_arc = ' '.join(emotions)
+    stories.write(story+"\n")# + " <|endoftext|>\r\n")
+    print(story)
+    print(emotion_arc)
 
   stories.close()
   titles.close()
 
   emo1 = []
+
