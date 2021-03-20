@@ -11,14 +11,14 @@ from spacy.lang.en.stop_words import STOP_WORDS
 
 nlp = spacy.load("en_core_web_sm")
 
-sys.path.append('comet-commonsense')
+#sys.path.append('comet-commonsense')
 
 import numpy as np
 from operator import itemgetter
 import json
 import time
 from collections import OrderedDict
-from comet_generate import get_comet_prediction
+#from comet_generate import get_comet_prediction
 
 from pathlib import Path
 import tensorflow as tf
@@ -34,14 +34,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 #bert_embedding = BertEmbedding(model='bert_24_1024_16', dataset_name='book_corpus_wiki_en_cased') #BertEmbedding()
 
 
-SCORE_PATH = 'comet-commonsense/precomputed_similarities/'
+#SCORE_PATH = 'comet-commonsense/precomputed_similarities/'
 
-with open(os.path.join(SCORE_PATH, 'word2index.pkl'), 'rb') as f:
-    word2ind = pickle.load(f)
-with open(os.path.join(SCORE_PATH, 'index2word.pkl'), 'rb') as f:
-    ind2word = pickle.load(f)
-with open(os.path.join(SCORE_PATH, 'glove/glove_embeddings.pkl'), 'rb') as f:
-    glove_embeddings = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'word2index.pkl'), 'rb') as f:
+#    word2ind = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'index2word.pkl'), 'rb') as f:
+#    ind2word = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'glove/glove_embeddings.pkl'), 'rb') as f:
+#    glove_embeddings = pickle.load(f)
 
 EMOTION_MAP = {'sadness':0, 'neutral':1, 'joy':2, 'fear': 3, 'anger': 4}
 
@@ -271,12 +271,12 @@ def generate_all_valid_sample_dict(predictor, ids, stories, method=None):
 
 def get_reward(predictor, gen_result, ids, gts_arc, batch_normalize=False, method=None):
     # print(gts_label.shape)
-    if method == 'comet':
-        comet_prediction = get_comet_prediction(gen_result)
-        score = compute_edit_distance(comet_prediction, gts_arc, ids)
-    elif method == 'clf_prob':
-        emotion_dist = get_emotion_dist(predictor, gen_result)
-        score = get_emotion_prob(emotion_dist, gts_arc, ids)
+    #if method == 'comet':
+    #    comet_prediction = get_comet_prediction(gen_result)
+    #    score = compute_edit_distance(comet_prediction, gts_arc, ids)
+    #elif method == 'clf_prob':
+    emotion_dist = get_emotion_dist(predictor, gen_result)
+    score = get_emotion_prob(emotion_dist, gts_arc, ids)
 
     return score
 

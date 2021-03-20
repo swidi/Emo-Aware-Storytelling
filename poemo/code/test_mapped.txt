@@ -1,0 +1,11 @@
+Joy Joy Sadness Sadness Sadness Joy Joy Joy Joy
+Neutral Neutral Neutral Neutral Neutral Neutral Neutral Joy
+Neutral Sadness Joy Sadness Sadness Joy
+Fear Joy Joy Joy
+Joy Joy Joy Sadness
+Joy Joy Joy Joy
+Joy Joy Neutral Joy
+Fear Fear Fear
+Sadness Sadness Sadness Neutral
+Joy Joy Joy Joy
+Joy Fear Joy Joy

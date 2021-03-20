@@ -17,14 +17,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 #bert_embedding = BertEmbedding(model='bert_24_1024_16', dataset_name='book_corpus_wiki_en_cased')
 
-SCORE_PATH = 'comet-commonsense/precomputed_similarities/'
+#SCORE_PATH = 'comet-commonsense/precomputed_similarities/'
 
-with open(os.path.join(SCORE_PATH, 'word2index.pkl'), 'rb') as f:
-    word2ind = pickle.load(f)
-with open(os.path.join(SCORE_PATH, 'index2word.pkl'), 'rb') as f:
-    ind2word = pickle.load(f)
-with open(os.path.join(SCORE_PATH, 'glove/glove_embeddings.pkl'), 'rb') as f:
-    glove_embeddings = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'word2index.pkl'), 'rb') as f:
+#    word2ind = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'index2word.pkl'), 'rb') as f:
+#    ind2word = pickle.load(f)
+#with open(os.path.join(SCORE_PATH, 'glove/glove_embeddings.pkl'), 'rb') as f:
+#    glove_embeddings = pickle.load(f)
 
 def compute_edit_distance_v2(y_pred, y_true, batch_normalize=True):
     # with open('computed_similarities.pickle', 'rb') as handle:

@@ -21,7 +21,7 @@ from __future__ import print_function
 import tensorflow as tf
 import texar as tx
 
-from data-utils import processor
+from data_utils import processor
 #from Reinforcement import rl_data_utils_x4_128_inference_v3 as data_utils # used for extra evaluation experiment to generate stories with various arcs and same title
 from data_utils import rl_data_utils_128 as data_utils # used for processing comet data for label finetune generationi
 

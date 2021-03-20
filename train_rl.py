@@ -38,7 +38,7 @@ from pathlib import Path
 
 from eval import evaluate_full
 
-
+print("Made it past imports")
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, no-member
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, no-member
 # pylint: disable=too-many-branches
