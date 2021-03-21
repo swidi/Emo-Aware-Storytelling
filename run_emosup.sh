@@ -10,7 +10,7 @@ test_checkpoint="output/emosup/model_best.ckpt"
 loaded_gpt="output/orig/gpt2_model.ckpt"
 
 output_dir="output/emosup/" 
-config_train="config_train_128_comet"
+config_train="config_train_poem"
 
 config_model="configs.config_model_345M"
 pretrained_model_dir="gpt2_pretrained_models/model_345M"

@@ -4,7 +4,7 @@ gpu_id=0 # 1,0
 is_train=0
 topk=40
 
-test_checkpoint="clf_prob_rl/model_best.ckpt"
+test_checkpoint="output/emosup/model.ckpt"
 
 
 config_model=configs.config_model_345M
