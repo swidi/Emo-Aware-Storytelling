@@ -142,4 +142,8 @@ dmypy.json
 data/
 
 # others
+gpt2_pretrained_models/
+
 comet-commonsense/
+model.tar.gz
+output/

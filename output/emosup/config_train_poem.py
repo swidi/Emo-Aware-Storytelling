@@ -2,8 +2,8 @@
 """
 ## fits to x4|x1
 
-tfrecord_data_dir = "data/" 
-arc_data = "data/"
+tfrecord_data_dir = "data_new3/"
+arc_data = "data_new3/"
 
 lr = 0.00001
 

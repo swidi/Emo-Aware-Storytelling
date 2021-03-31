@@ -1,3 +1,0 @@
-# Annotation Guidelines
-
-tbd

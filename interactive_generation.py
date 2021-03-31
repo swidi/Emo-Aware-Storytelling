@@ -15,6 +15,8 @@
 """
 
 import importlib
+import random
+import re
 import numpy as np
 import tensorflow as tf
 import texar as tx
@@ -40,9 +42,10 @@ flags.DEFINE_string("pretrained_model_dir", None,
                      "vocabuary, etc.")
 flags.DEFINE_integer("seed", None, "Random seed.")
 flags.DEFINE_integer("nsamples", 1, "The number of samples per input.")
-flags.DEFINE_integer("batch_size", 1, "The batch size of input.")
 flags.DEFINE_integer("max_decoding_length", 128,
                      "The maximun length of generated text.")
+flags.DEFINE_integer("batch_size", 1, "The batch size of input.")
+flags.DEFINE_integer("poem_batch_size", 1, "The batch size of input.")
 flags.DEFINE_float("temperature", 0.7,
                    "Softmax temperature for top-k sample decoding. Must be "
                    "strictly greater than 0. Defaults to 0.7.")
@@ -50,6 +53,8 @@ flags.DEFINE_integer("top_k", 40,
                      "The number of top most likely candidates from a vocab "
                      "distribution.")
 flags.DEFINE_boolean("is_interactive", False, "Interactive mode or not.")
+flags.DEFINE_boolean("is_eval", False, "Evaluation mode or not.")
+flags.DEFINE_integer("eval_poems_per_arc", 20, "The amount of poems to generate per emotion arc")
 flags.DEFINE_string("config_type", "texar",
                     "The configuration file type. Set to 'json' if the GPT-2 "
                     "config file is in the same type of the official GPT-2 "
@@ -65,6 +70,26 @@ flags.DEFINE_string("config_model", "configs.config_model_117M",
                     "For '--config_type=texar', set the texar config file "
                     "like: '--config_model configs.config_model_117M'.")
 
+eval_arcs = ["Joy Joy Sadness", "Humor Annoyance Humor", "Suspense Suspense Vitality"]
+eval_title = "my heart will go on" 
+
+def normalize_stanza(stanza):
+    stanza = stanza[:stanza.find('<|endoftext|>')].strip() if '<|endoftext|>' in stanza else stanza
+    stanza = stanza.replace("|", "")
+    stanza = stanza.strip()
+    # Insert a linebreak BEFORE capital words (except I)
+    stanza = re.sub(r"([A-HJ-Z]|I\w)", r"\n\1", stanza)
+    if stanza[0] == '\n':
+        stanza = stanza[1:]
+    return stanza
+
+def normalize_emo(emo):
+    emo = emo.capitalize()
+    if emo == "Beauty":
+        emo = "Joy"
+    if emo == "Sublime":
+        emo = "Awe"
+    return  emo + " " + emo + " " + emo
 
 def main(_):
     """
@@ -132,103 +157,109 @@ def main(_):
         hparams=gpt2_config.decoder)
 
     with tf.Session() as sess:
+        # Generate continuations of context
+        lm_output, _ = decoder(
+            context=context,
+            context_sequence_length=context_length,
+            max_decoding_length=max_decoding_length,
+            helper=helper,
+            mode=tf.estimator.ModeKeys.PREDICT)
+
+        # Load model checkpoint
+        if FLAGS.checkpoint:
+            tf.logging.info("Restore from {}".format(FLAGS.checkpoint))
+            saver = tf.train.Saver()
+            saver.restore(sess, FLAGS.checkpoint)
+        elif FLAGS.pretrain_checkpoint:
+            model_utils.init_gpt2_checkpoint(
+                sess, FLAGS.pretrain_checkpoint)
+        print("\nFinished loading\n")
 
         if FLAGS.is_interactive:
-            # Generate continuations of context
-            lm_output, _ = decoder(
-                context=context,
-                context_sequence_length=context_length,
-                max_decoding_length=max_decoding_length,
-                helper=helper,
-                mode=tf.estimator.ModeKeys.PREDICT)
-
-            # Load model checkpoint
-            if FLAGS.checkpoint:
-                tf.logging.info("Restore from {}".format(FLAGS.checkpoint))
-                saver = tf.train.Saver()
-                saver.restore(sess, FLAGS.checkpoint)
-            elif FLAGS.pretrain_checkpoint:
-                model_utils.init_gpt2_checkpoint(
-                    sess, FLAGS.pretrain_checkpoint)
-                print("\nFinished loading\n")
-
             # Enter interactive mode
             while True:
-
                 story_title = input("Please enter a title! or q to exit >>> ")
                 if story_title == "q":
                     break
-                emotion_arc = input("Please enter a sequence of three emotions separated by space from joy, anger, sadness, fear, neutral! for example: joy sadness sadness, or q to exit >>> ")
-                if emotion_arc == "q":
+                emotion_arc_poem = input("Please enter a sequence of emotions, one for each stanza. Choose from: Beauty, Joy, Vitality, Humor, Uneasiness, Sadness, Suspense, Annoyance, Nostalgia, Awe, Sublime. Beauty/Joy and Awe/Sublime refer to the same emotion internally.\n>>> ")
+                if emotion_arc_poem == "q":
                     break
                 # raw_text = raw_text + " | "
 
                 while not story_title:
                     print("Input should not be empty!")
                     story_title = input("Please enter a title! or q to exit >>> ")
-                    emotion_arc = input("Please enter a sequence of three emotions separated by space from joy, anger, sadness, fear, neutral! or q to exit >>> ")
+                    emotion_arc_poem = input("Please enter a sequence of three emotions separated by space from joy, anger, sadness, fear, neutral! or q to exit >>> ")
 
-                raw_text = " <$> ".join((emotion_arc, story_title))
+                for _ in range(FLAGS.poem_batch_size):
+                    for emotion in emotion_arc_poem.split():
+                        emotion_arc = normalize_emo(emotion)
+                        print(emotion_arc)
+                        raw_text = " <$> ".join((emotion_arc, story_title))
+                        print(raw_text)
+                        context_tokens = proc.encode(raw_text)
+    
+                        feed_dict = {
+                            context: [context_tokens for _ in range(batch_size)],
+                            context_length:
+                                [len(context_tokens) for _ in range(batch_size)],
+                            tx.context.global_mode(): tf.estimator.ModeKeys.PREDICT
+                        }
+                        generated = 0
+                        for _ in range(nsamples // batch_size):
+    
+                            output = sess.run(lm_output, feed_dict=feed_dict)
+    
+                            sample_id = output.sample_id
+                            for i in range(batch_size):
+                                si = sample_id[i][len(context_tokens):]
+                                s_text = proc.decode(si)
+                                s_text = normalize_stanza(s_text)
+                                print(s_text)
+                    # end of poem
+                    print("=" * 80)
+        elif FLAGS.is_eval:
+            eval_arcs_total = []
+            for arc in eval_arcs:
+                for _ in range(FLAGS.eval_poems_per_arc):
+                    eval_arcs_total.append(arc)
+            random.shuffle(eval_arcs_total)
 
+            eval_arcs_file = open("eval_arcs.txt", "w")
+            poems_file = open("eval_poems.txt", "w")
+            for arc in eval_arcs_total:
+                eval_arcs_file.write(arc + "\n")
 
-                context_tokens = proc.encode(raw_text)
+            for emotion_arc_poem in eval_arcs_total:
+                story_title = eval_title
+                for emotion in emotion_arc_poem.split():
+                    emotion_arc = normalize_emo(emotion)
+                    print("Generating: " + story_title + " / " + emotion_arc)
+                    raw_text = " <$> ".join((emotion_arc, story_title))
+                    context_tokens = proc.encode(raw_text)
 
-                feed_dict = {
-                    context: [context_tokens for _ in range(batch_size)],
-                    context_length:
-                        [len(context_tokens) for _ in range(batch_size)],
-                    tx.context.global_mode(): tf.estimator.ModeKeys.PREDICT
-                }
-                generated = 0
-                for _ in range(nsamples // batch_size):
+                    feed_dict = {
+                        context: [context_tokens for _ in range(batch_size)],
+                        context_length:
+                            [len(context_tokens) for _ in range(batch_size)],
+                        tx.context.global_mode(): tf.estimator.ModeKeys.PREDICT
+                    }
+                    generated = 0
+                    for _ in range(nsamples // batch_size):
 
-                    output = sess.run(lm_output, feed_dict=feed_dict)
+                        output = sess.run(lm_output, feed_dict=feed_dict)
 
-                    sample_id = output.sample_id
-                    for i in range(batch_size):
-
-                        generated += 1
-                        print("=" * 40 +
-                              " SAMPLE " + str(generated) + " " + "=" * 40)
-                        si = sample_id[i][len(context_tokens):]
-                        s_text = proc.decode(si)
-                        s_text = s_text[:s_text.find('<|endoftext|>')].strip() if '<|endoftext|>' in s_text else s_text
-                        print(s_text)
+                        sample_id = output.sample_id
+                        for i in range(batch_size):
+                            si = sample_id[i][len(context_tokens):]
+                            s_text = proc.decode(si)
+                            s_text = normalize_stanza(s_text)
+                            print(s_text)
+                            print()
+                            poems_file.write(s_text + "\n\n")
+                    # end of poem
                 print("=" * 80)
-        else:
-            # Generate samples from scratch
-            lm_output, _ = decoder(
-                max_decoding_length=max_decoding_length,
-                helper=helper,
-                mode=tf.estimator.ModeKeys.PREDICT)
-
-            # Load model checkpoint
-            if FLAGS.checkpoint:
-                tf.logging.info("Restore from {}".format(FLAGS.checkpoint))
-                saver = tf.train.Saver()
-                saver.restore(sess, FLAGS.checkpoint)
-            elif FLAGS.pretrain_checkpoint:
-                model_utils.init_gpt2_checkpoint(
-                    sess, FLAGS.pretrain_checkpoint)
-                print("\nFinished loading\n")
-
-            feed_dict = {
-                tx.context.global_mode(): tf.estimator.ModeKeys.PREDICT
-            }
-            generated = 0
-            while nsamples == 0 or generated < nsamples:
-
-                output = sess.run(lm_output, feed_dict=feed_dict)
-
-                sample_id = output.sample_id
-                for i in range(batch_size):
-
-                    generated += batch_size
-                    text = proc.decode(sample_id[i])
-                    print("=" * 40 +
-                          " SAMPLE " + str(generated) + " " + "=" * 40)
-                    print(text)
-
+                poems_file.write("="*80+"\n")
 
 if __name__ == "__main__":
     tf.app.run()

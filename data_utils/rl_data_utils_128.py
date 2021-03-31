@@ -24,7 +24,7 @@ import csv
 import nltk
 import tensorflow as tf
 import torch
-from fast_bert.prediction import BertClassificationPredictor
+#from fast_bert.prediction import BertClassificationPredictor
 
 
 
@@ -159,8 +159,7 @@ def file_based_convert_examples_to_features_v2(
 #        emotion_feats = pickle.load(fp)
 
     for (i, example) in enumerate(examples):
-        if i % 5000 == 0:
-            print("{} of {} is processed!".format(i, len(examples)))
+        print("{} of {} is processed!".format(i, len(examples)))
 
 #        emotion_fea = emotion_feats[i]
 
