@@ -9,8 +9,7 @@ This repository contains the code for the experiment we did in our term paper 'M
 3. `[train/test/dev]_mapped.txt`: stanza emotions
 
 ## Code
-
-* The code depends on a patched version of [Texar](https://github.com/asyml/texar). Please install the version under [third_party/texar](./third_party/texar). Follow the installation instructions in the README there.
+* The code depends on Python 3.6, a specific choice of outdated packages (req.txt), as well as a patched version of [Texar](https://github.com/asyml/texar). Please install the version under [third_party/texar](./third_party/texar). Follow the installation instructions in the README there.
 * Download gpt-2-M from [here](https://github.com/openai/gpt-2) and put it in `gpt2_pretrained_models/` folder.
 * Use `prepare_poemo.py` to process PO-EMO's tsv format
 * Use `translate.py` to translate the german dataset into english
